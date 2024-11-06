@@ -59,6 +59,13 @@ services:
       - node-2
     networks:
       - my-network
+    # Optional: Add a healthcheck for Nginx to verify backend readiness
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://node-1:3000/health"]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+      timeout: 5s
 
 networks:
   my-network:
