@@ -15,7 +15,7 @@ services:
     networks:
       - my-network
 
-  node:
+  node-1:
     build:
       context: .
       dockerfile: .Dockerfile-node
@@ -28,6 +28,35 @@ services:
       DB_DATABASE: shubham
     depends_on:
       - mysql
+    networks:
+      - my-network
+
+  node-2:
+    build:
+      context: .
+      dockerfile: .Dockerfile-node
+    ports:
+      - "3001:3000"  # Different port for node-2 service, exposed as 3001 on the host
+    environment:
+      DB_HOST: mysql
+      DB_USER: shubham
+      DB_PASSWORD: Shubham123!
+      DB_DATABASE: shubham
+    depends_on:
+      - mysql
+    networks:
+      - my-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./Nginx/nginx.conf:/etc/nginx/nginx.conf:ro  # Mount the custom Nginx config
+    depends_on:
+      - node-1
+      - node-2
     networks:
       - my-network
 
