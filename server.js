@@ -1,5 +1,6 @@
 const express = require('express');
 const db = require('./dbConfig');
+const env = require('dotenv').config();
 const app = express();
 const port = 3000;
 app.use(express.json());
