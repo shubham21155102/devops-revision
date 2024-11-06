@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  mysql:
+    build:
+      context: .
+      dockerfile: .Dockerfile-mysql
+    environment:
+      MYSQL_DATABASE: shubham
+      MYSQL_USER: shubham
+      MYSQL_PASSWORD: Shubham123!
+      MYSQL_ROOT_PASSWORD: Shubham123!
+    ports:
+      - "3306:3306"
+    networks:
+      - my-network
+
+  node:
+    build:
+      context: .
+      dockerfile: .Dockerfile-node
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: mysql
+      DB_USER: shubham
+      DB_PASSWORD: Shubham123!
+      DB_DATABASE: shubham
+    depends_on:
+      - mysql
+    networks:
+      - my-network
+
+networks:
+  my-network:
+    driver: bridge
