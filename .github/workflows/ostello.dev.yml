@@ -1,0 +1,42 @@
+name: Deploy Dev to Beanstalk
+
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set current date as env variable
+        id: current-date
+        run: echo "NOW=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm i
+
+      - name: Build
+        run: npm run build
+
+      - name: Generate deployment package
+        run: zip -r ${{ steps.current-date.outputs.NOW }}.zip . -x '*.git*' -x '*node_modules*'
+
+      - name: Deploy to AWS Elasticbeanstalk
+        uses: einaregilsson/beanstalk-deploy@v21
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: backend-dev
+          environment_name: backend-dev-env
+          version_label: ${{ github.sha }}
+          region: ap-south-1
+          deployment_package: ${{ steps.current-date.outputs.NOW }}.zip
+          existing_bucket_name: backend-dev-deployment
