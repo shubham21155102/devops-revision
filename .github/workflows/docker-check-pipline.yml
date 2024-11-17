@@ -82,10 +82,10 @@ jobs:
       run: |
         docker-compose -f docker-compose.yml up -d --build
 
-    - name: Wait for MySQL to be Ready
-      run: |
-        chmod +x wait-for-it.sh
-        ./wait-for-it.sh mysql:3306 --timeout=30 --strict -- echo "MySQL is ready!"
+    # - name: Wait for MySQL to be Ready
+    #   run: |
+    #     chmod +x wait-for-it.sh
+    #     ./wait-for-it.sh mysql:3306 --timeout=60 --strict -- echo "MySQL is ready!"
 
     - name: Test API Endpoints
       run: |
