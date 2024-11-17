@@ -11,4 +11,6 @@ COPY . .
 EXPOSE 3000
 
 
-CMD ["./wait-for-it.sh", "mysql:3306", "--", "npm", "start"]
+# CMD ["./wait-for-it.sh", "mysql:3306", "--", "npm", "start"]
+
+CMD ["./wait-for-it.sh", "mysql:3306", "--timeout=60", "--strict", "--", "npm", "start"]
