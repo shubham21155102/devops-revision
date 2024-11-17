@@ -1,0 +1,52 @@
+name: Acencore ML CI Pipeline
+on:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      #   - name: Upgrade Ubuntu
+      #     run: sudo apt-get update && sudo apt-get upgrade -y
+      - name: Install Java , JDK and JRE
+        run: sudo apt-get install openjdk-11-jdk openjdk-11-jre -y
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          # cache: "pip"
+      - name: Install Dependencies
+        run: |
+          sudo python -m pip install --upgrade pip
+          sudo pip install -r requirements.txt
+      - name: Adding Environment Variables
+        run: echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env && echo "MONGODB_COLLECTION=${{secrets.MONGODB_COLLECTION}}" >> .env && echo "MONGODB_URI=${{secrets.MONGODB_URI}}" >> .env && echo "DB_NAME=${{secrets.DB_NAME}}" >> .env
+      - name: Run with nohup
+        run: nohup uvicorn app:app --host 0.0.0.0 --port 8000 > uvicorn.log 2>&1 &
+      #   - name: Run Tests
+      #     run: pytest
+      - name: Manual Testing
+        run: |
+          sleep 120
+          curl http://localhost:8000
+      - name: Stop the server
+        run: sudo bash kill.sh
+      #   - name: Upload Test Results
+      #     uses: actions/upload-artifact@v2
+      #     with:
+      #       name: test-results
+      #       path: test-results
+      - name: Success
+        run: echo "Pipeline Completed Successfully" 

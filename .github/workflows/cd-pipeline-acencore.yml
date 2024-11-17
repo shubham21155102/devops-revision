@@ -1,0 +1,54 @@
+name: Acencore ML CD Pipeline
+on:
+  workflow_run:
+    workflows: ["Acencore ML CI Pipeline"]
+    types:
+      - completed
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Delete the __pycache__ folders
+        run: |
+          sudo find "/home/ubuntu/ml-ci-cd/actions-runner/_work/acencore-ml" -type d -name "__pycache__" -exec rm -rf {} +
+
+      - name: Pull the latest code
+        uses: actions/checkout@v2
+        with:
+          ref: main
+
+      # Uncomment and modify the following steps based on your requirements:
+
+      # - name: Install Python
+      #   uses: actions/setup-python@v2
+      #   with:
+      #     python-version: 3.8
+      #     architecture: x64  # Optional: Specify the architecture if needed
+
+      - name: Install Dependencies
+        run: |
+          sudo pip install -r requirements.txt
+
+      # - name: Delete the existing .env (if needed)
+      #   run: rm -rf .env
+
+      - name: Adding Environment Variables
+        run: |
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+          echo "MONGODB_COLLECTION=${{ secrets.MONGODB_COLLECTION }}" >> .env
+          echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+
+      - name: Stop the Already running container
+        run: sudo bash ./kill.sh
+
+      - name: Rerun the ML server
+        run: |
+          export RUNNER_TRACKING_ID=""
+          nohup uvicorn app:app --host 0.0.0.0 --port 8000 > uvicorn.log 2>&1 &
+
+      - name: Test the Running Server
+        run: |
+          sleep 120
+          curl http://localhost:8000

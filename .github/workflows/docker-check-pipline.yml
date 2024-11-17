@@ -1,0 +1,56 @@
+name: Test Docker Compose Setup
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  docker-compose-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v2
+
+    - name: Log in to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build and Run Docker Compose
+      run: |
+        docker-compose -f docker-compose.yml up -d --build
+
+    - name: Wait for Services to Become Healthy
+      run: |
+        echo "Waiting for all containers to become healthy..."
+        retries=10
+        for i in $(seq 1 $retries); do
+          STATUS=$(docker inspect --format='{{json .State.Health.Status}}' nginx | tr -d '"')
+          if [ "$STATUS" = "healthy" ]; then
+            echo "Nginx is healthy."
+            exit 0
+          fi
+          echo "Nginx is not healthy yet. Retrying in 10 seconds..."
+          sleep 10
+        done
+        echo "Nginx did not become healthy in time."
+        docker-compose logs
+        exit 1
+
+    - name: Test API Endpoints
+      run: |
+        echo "Testing node-1 endpoint..."
+        curl -f http://localhost:3000/health || exit 1
+        echo "Testing node-2 endpoint..."
+        curl -f http://localhost:3001/health || exit 1
+
+    - name: Clean Up
+      if: always()
+      run: docker-compose down
