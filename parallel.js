@@ -1,4 +1,5 @@
 const apiUrl = "https://api.shubhamiitbhu.in/user/health";
+// const apiUrl = "https://www.placement.iitbhu.ac.in/"
 const triggerApi = () => {
     return fetch(apiUrl)
         .then(response => {
@@ -13,16 +14,24 @@ const triggerApi = () => {
             console.error("Error triggering API:", error);
         });
 };
+let requestNumber=1;
 const triggerApisInParallel = () => {
-    const promises = Array(500).fill(null).map(() => triggerApi());
+    const promises = Array(100).fill(null).map(() => triggerApi());
+    console.log(promises)
     Promise.all(promises)
         .then((e) => {
-            console.log(e);
             e.map((data) => {
-                console.log(data.message);
+                try{
+                    console.log(requestNumber+" : "+data.message);
+                    
+                }catch(e){
+                    console.log("Error in request number ",requestNumber)
+                    console.log("Error",e)
+                }
+                requestNumber++;
             }
             )
-            // console.log("All 500 API calls completed.");
+            console.log("All 500 API calls completed.");
         })
         .catch(error => {
             console.error("Error in API calls:", error);
