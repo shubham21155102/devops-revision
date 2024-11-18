@@ -36,7 +36,13 @@ app.get('/test', (req, res) => {
   });
 });
 app.get('/health', (req, res) => {
-  res.status(200).send('OK');
+  res.cookie('name', 'express', { maxAge: 1000 * 60  }) 
+     .status(200)
+     .send({
+    status: 'UP',
+    port: port,
+    db: db.config.host
+     });
 });
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
