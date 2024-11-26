@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: default # Optional, specify if you're working with a specific namespace
+data:
+  nginx.conf: |
+    worker_processes  1;
+    events {
+        worker_connections 1024;
+    }
+
+    http {
+        upstream backend {
+            server node-1:3000; # Node-1 backend
+            server node-2:3001; # Node-2 backend
+        }
+
+        server {
+            listen 80;
+
+            # Default route
+            location / {
+                proxy_pass http://node-1:3000; # Node-1 service
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_cache_bypass $http_upgrade;
+            }
+
+            # Route for Node-2
+            location /node2/ {
+                proxy_pass http://node-2:3000; # Node-2 service
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_cache_bypass $http_upgrade;
+            }
+
+            # Load balancer for backend services
+            location /backend/ {
+                proxy_pass http://backend; # Load balanced route
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_cache_bypass $http_upgrade;
+            }
+        }
+    }
